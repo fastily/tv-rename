@@ -1,0 +1,2 @@
+rich==13.9.4
+tvdb-v4-official==1.1.0
