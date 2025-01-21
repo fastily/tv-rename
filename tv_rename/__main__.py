@@ -8,19 +8,9 @@ from pathlib import Path
 
 from rich.logging import RichHandler
 
+from .util import natural_sort, VIDEO_EXTS
+
 log = logging.getLogger(__name__)
-
-
-def _natural_sort(s: Path) -> list[int | str]:
-    """Comparator function that generates a comparison key for `s`, implements natural sort.
-
-    Args:
-        s (Path): The `Path` being compared
-
-    Returns:
-        list[int | str]: the comparison key for `s`
-    """
-    return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', str(s))]
 
 
 def _main() -> None:
@@ -38,7 +28,7 @@ def _main() -> None:
     log.addHandler(RichHandler(rich_tracebacks=True))
     log.setLevel(logging.INFO)
 
-    sort_key = None if args.l else _natural_sort
+    sort_key = None if args.l else natural_sort
 
     if args.dirs:
         dl = args.dirs
@@ -63,12 +53,12 @@ def _main() -> None:
                 log.error("'%s' does not follow the standard format (e.g. 'Season 1') and you have not passed -n to override", dir)
                 return
 
-            exts = {args.x} if args.x else {".mkv", ".mp4", ".avi"}
+            exts = {args.x} if args.x else VIDEO_EXTS
             prefix = f"{args.p if args.p else dir.resolve(True).parent.name} - "
             l = [(s, dir / f"{prefix}s{season_cnt:02}e{i:02}{s.suffix}") for i, s in enumerate(sorted([f for f in dir.iterdir() if f.is_file() and f.suffix.lower() in exts], key=sort_key), 1)]
 
         for old_name, new_name in l:
-            log.info("Renaming '%s' -> '%s'", old_name, new_name)
+            log.info('Renaming "%s" -> "%s"', old_name, new_name)
             if not args.s:
                 old_name.rename(new_name)
 

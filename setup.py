@@ -19,9 +19,7 @@ setuptools.setup(
     packages=setuptools.find_packages(include=["tv_rename"]),
     install_requires=["rich", "tvdb-v4-official"],
     entry_points={
-        'console_scripts': [
-            'tv_rename = tv_rename.__main__:_main'
-        ]
+        'console_scripts': ['tv_rename = tv_rename.__main__:_main', 'unmangle_episodes = tv_rename.unmangle:_main']
     },
     classifiers=[
         "Natural Language :: English",
