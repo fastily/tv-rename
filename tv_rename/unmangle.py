@@ -1,4 +1,4 @@
-"""Program that renamed dvd/streaming/absolute ordered episodes to aired ordering based using data from TheTVDB"""
+"""Program that renames dvd/streaming/absolute ordered episodes to aired ordering based using data from TheTVDB"""
 
 import logging
 
@@ -77,7 +77,7 @@ def _counts_match(a: Iterable, b: Iterable, label_a: str, label_b: str) -> bool:
 
 def _main() -> None:
     """Main driver, invoked when this file is run directly."""
-    cli_parser = ArgumentParser(description="renames TV episodes or Season directories")
+    cli_parser = ArgumentParser(description="Program that renames tv episode orderings from dvd/absolute/streaming order to aired order")
     cli_parser.add_argument('--absolute', action='store_true', help="Treat input as absolute ordering")
     cli_parser.add_argument('--streaming', action='store_true', help="Treat input dirs as streaming ordering")
 
@@ -90,9 +90,9 @@ def _main() -> None:
     cli_parser.add_argument('root_dir', type=Path, nargs='?', default=Path("."), help='the directories to work on')
     args = cli_parser.parse_args()
 
-    for lg in (log, logging.getLogger("tv_rename")):
-        lg.addHandler(RichHandler(rich_tracebacks=True))
-        lg.setLevel(logging.DEBUG)
+    lg = logging.getLogger("tv_rename")
+    lg.addHandler(RichHandler(rich_tracebacks=True))
+    lg.setLevel(logging.DEBUG)
 
     if args.absolute:
         alt_type = "absolute"
