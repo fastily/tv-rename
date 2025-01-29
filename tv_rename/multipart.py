@@ -5,9 +5,7 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
-from rich.logging import RichHandler
-
-from .util import episodes_of, fetch_tvdb, natural_sort, VIDEO_EXTS
+from .util import configure_logging, episodes_of, fetch_tvdb, find_all_eps, shared_abs_stream_opts, resolve_alt_type, shared_cli_opts, shared_series_id_root_dir
 
 
 log = logging.getLogger(__name__)
@@ -28,7 +26,7 @@ class EpisodeGroup:
         self.group_season = group_season
         self.mapped_eps = mapped_eps
 
-    def rename(self, dry_run: bool = False):
+    def rename(self, dry_run: bool = False) -> None:
         """Renames the multipart episode file based on the episodes that are contained in it.
 
         Args:
@@ -44,34 +42,12 @@ class EpisodeGroup:
 
 def _main() -> None:
     """Main driver, invoked when this file is run directly."""
+    args = ArgumentParser(description="Program that renames multipart tv episodes into their aired ordering", parents=[shared_cli_opts(), shared_abs_stream_opts(), shared_series_id_root_dir()]).parse_args()
+    configure_logging()
 
-    cli_parser = ArgumentParser(description="Program that renames multipart tv episodes into their aired ordering")
-    cli_parser.add_argument('--absolute', action='store_true', help="Treat input as absolute ordering")
-    cli_parser.add_argument('--streaming', action='store_true', help="Treat input dirs as streaming ordering")
-
-    cli_parser.add_argument('-l', action='store_true', help="Use lexigraphical sort instead of natural sort")
-    cli_parser.add_argument('-s', action='store_true', help="Dry run, don't actually rename any files/dirs")
-    cli_parser.add_argument('-x', type=str, metavar="ext", help="The file extensions to target.  Defaults to .mkv, .mp4, and .avi")
-
-    cli_parser.add_argument('series_id', type=int, help='The series id of the show in question on thetvdb')
-    cli_parser.add_argument('root_dir', type=Path, nargs='?', default=Path("."), help='the series directory to work on.  Defaults to the current working directory')
-    args = cli_parser.parse_args()
-
-    lg = logging.getLogger()
-    lg.addHandler(RichHandler(rich_tracebacks=True))
-    lg.setLevel(logging.DEBUG)
-
-    if args.absolute:
-        alt_type = "absolute"
-    elif args.streaming:
-        alt_type = "streaming"
-    else:
-        alt_type = "dvd"
-
+    alt_type = resolve_alt_type(args.absolute, args.streaming)
     tvdb = fetch_tvdb()
-    exts = {args.x} if args.x else VIDEO_EXTS
-
-    pl = sorted([p for p in args.root_dir.glob("*/*") if p.is_file() and p.suffix.lower() in exts], key=None if args.l else natural_sort)
+    pl = find_all_eps(args.root_dir, args.l, args.x)
     id_to_aired = {e.id: e for e in episodes_of(tvdb, args.series_id)}
 
     path_to_eps: dict[Path, EpisodeGroup] = {}

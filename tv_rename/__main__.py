@@ -6,27 +6,20 @@ import re
 from argparse import ArgumentParser
 from pathlib import Path
 
-from rich.logging import RichHandler
-
-from .util import natural_sort, VIDEO_EXTS
+from .util import configure_logging, natural_sort, shared_cli_opts, VIDEO_EXTS
 
 log = logging.getLogger(__name__)
 
 
 def _main() -> None:
     """Main driver, invoked when this file is run directly."""
-    cli_parser = ArgumentParser(description="renames TV episodes or Season directories")
-    cli_parser.add_argument('-s', action='store_true', help="Dry run, don't actually rename any files/dirs")
+    cli_parser = ArgumentParser(description="renames TV episodes or Season directories", parents=[shared_cli_opts()])
     cli_parser.add_argument('-d', action='store_true', help="Treat the input dir as a dir containg of season dirs to rename")
-    cli_parser.add_argument('-l', action='store_true', help="Use lexigraphical sort instead of natural sort")
-    cli_parser.add_argument('-x', type=str, metavar="ext", help="The file extension to get. Ignored if -d is passed.")
     cli_parser.add_argument('-n', type=int, metavar="season_number", help="The season number to rename episode files to. Ignored if -d is passed.")
-    cli_parser.add_argument('-p', type=str, metavar="prefix", help="An optional prefix use at the beginning of episode filenames. Ignored if -d is passed.")
     cli_parser.add_argument('dirs', type=Path, nargs='*', help='the directories to work on')
     args = cli_parser.parse_args()
 
-    log.addHandler(RichHandler(rich_tracebacks=True))
-    log.setLevel(logging.INFO)
+    configure_logging()
 
     sort_key = None if args.l else natural_sort
 
@@ -54,7 +47,7 @@ def _main() -> None:
                 return
 
             exts = {args.x} if args.x else VIDEO_EXTS
-            prefix = f"{args.p if args.p else dir.resolve(True).parent.name} - "
+            prefix = f"{dir.resolve(True).parent.name} - "
             l = [(s, dir / f"{prefix}s{season_cnt:02}e{i:02}{s.suffix}") for i, s in enumerate(sorted([f for f in dir.iterdir() if f.is_file() and f.suffix.lower() in exts], key=sort_key), 1)]
 
         for old_name, new_name in l:

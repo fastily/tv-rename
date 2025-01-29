@@ -4,11 +4,8 @@ import logging
 
 from argparse import ArgumentParser
 from collections.abc import Iterable
-from pathlib import Path
 
-from rich.logging import RichHandler
-
-from .util import episodes_of, fetch_tvdb, natural_sort, VIDEO_EXTS
+from .util import configure_logging, episodes_of, fetch_tvdb, find_all_eps, shared_abs_stream_opts, resolve_alt_type, shared_cli_opts, shared_series_id_root_dir
 
 
 log = logging.getLogger(__name__)
@@ -34,33 +31,15 @@ def _counts_match(a: Iterable, b: Iterable, label_a: str, label_b: str) -> bool:
 
 def _main() -> None:
     """Main driver, invoked when this file is run directly."""
-    cli_parser = ArgumentParser(description="Program that renames tv episode orderings from dvd/absolute/streaming order to aired order")
-    cli_parser.add_argument('--absolute', action='store_true', help="Treat input as absolute ordering")
-    cli_parser.add_argument('--streaming', action='store_true', help="Treat input dirs as streaming ordering")
-
-    cli_parser.add_argument('-l', action='store_true', help="Use lexigraphical sort instead of natural sort")
-    cli_parser.add_argument('-s', action='store_true', help="Dry run, don't actually rename any files/dirs")
+    cli_parser = ArgumentParser(description="Program that renames tv episode orderings from dvd/absolute/streaming order to aired order", parents=[shared_cli_opts(), shared_abs_stream_opts(), shared_series_id_root_dir()])
     cli_parser.add_argument('-i', action='store_true', help="Ignore errors mistmatch between episode count on thetvdb and the local filesystem")
-    cli_parser.add_argument('-x', type=str, metavar="ext", help="The file extensions to target.  Defaults to .mkv, .mp4, and .avi")
-
-    cli_parser.add_argument('series_id', type=int, help='The series id of the show in question on thetvdb')
-    cli_parser.add_argument('root_dir', type=Path, nargs='?', default=Path("."), help='the series directory to work on.  Defaults to the current working directory.')
     args = cli_parser.parse_args()
 
-    lg = logging.getLogger("tv_rename")
-    lg.addHandler(RichHandler(rich_tracebacks=True))
-    lg.setLevel(logging.DEBUG)
+    configure_logging()
 
-    if args.absolute:
-        alt_type = "absolute"
-    elif args.streaming:
-        alt_type = "streaming"
-    else:
-        alt_type = "dvd"
-
+    alt_type = resolve_alt_type(args.absolute, args.streaming)
     tvdb = fetch_tvdb()
-    exts = {args.x} if args.x else VIDEO_EXTS
-    pl = sorted([p for p in args.root_dir.glob("*/*") if p.is_file() and p.suffix.lower() in exts], key=None if args.l else natural_sort)
+    pl = find_all_eps(args.root_dir, args.l, args.x)
     el = episodes_of(tvdb, args.series_id, alt_type)
 
     if not (_counts_match(pl, el, "episodes on local system", f"thetvdb {alt_type}") or args.i):
