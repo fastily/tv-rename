@@ -14,7 +14,7 @@ from rich.logging import RichHandler
 from tvdb_v4_official import TVDB
 
 
-VIDEO_EXTS = {".mkv", ".mp4", ".avi"}
+VIDEO_EXTS = {".avi", ".mkv", ".mp4", ".webm"}
 _MY_TVDB: TVDB | None = None
 
 log = logging.getLogger(__name__)
