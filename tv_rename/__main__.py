@@ -15,7 +15,8 @@ def _main() -> None:
     """Main driver, invoked when this file is run directly."""
     cli_parser = ArgumentParser(description="renames TV episodes or Season directories", parents=[shared_cli_opts()])
     cli_parser.add_argument('-d', action='store_true', help="Treat the input dir as a dir containg of season dirs to rename")
-    cli_parser.add_argument('-n', type=int, metavar="season_number", help="The season number to rename episode files to. Ignored if -d is passed.")
+    cli_parser.add_argument('-i', default=1, type=int, metavar="season", help="The season number to start enumerating directories at when -d is passed. Defaults to 1.")
+    cli_parser.add_argument('-n', type=int, metavar="season_number", help="The season number to use when renaming episode files. Ignored if -d is passed.")
     cli_parser.add_argument('dirs', type=Path, nargs='*', help='the directories to work on')
     args = cli_parser.parse_args()
 
@@ -40,7 +41,7 @@ def _main() -> None:
         log.info("Now processing '%s'", dir)
 
         if args.d:
-            l = [(s, dir / f"Season {i}") for i, s in enumerate(sorted([d for d in dir.iterdir() if d.is_dir()], key=sort_key), 1)]
+            l = [(s, dir / f"Season {i}") for i, s in enumerate(sorted([d for d in dir.iterdir() if d.is_dir()], key=sort_key), args.i)]
         else:
             if not (season_cnt := int(dir.name.split(" ")[1]) if re.match(r"(?i)Season \d+", dir.name) else args.n):
                 log.error("'%s' does not follow the standard format (e.g. 'Season 1') and you have not passed -n to override", dir)

@@ -7,7 +7,7 @@ Collection of tools for renaming and unmangling TV episode filenames.  Compares 
 ## Usage
 ### tv_rename
 ```
-usage: __main__.py [-h] [-l] [-s] [-x ext] [-d] [-n season_number] [dirs ...]
+usage: __main__.py [-h] [-l] [-s] [-x ext] [-d] [-i season] [-n season_number] [dirs ...]
 
 renames TV episodes or Season directories
 
@@ -18,9 +18,10 @@ options:
   -h, --help        show this help message and exit
   -l                Use lexigraphical sort instead of natural sort
   -s                Dry run, don't actually rename any files/dirs
-  -x ext            The file extensions to target. Defaults to .mkv, .avi, .mp4
+  -x ext            The file extensions to target. Defaults to .avi, .mp4, .webm, .mkv
   -d                Treat the input dir as a dir containg of season dirs to rename
-  -n season_number  The season number to rename episode files to. Ignored if -d is passed.
+  -i season         The season number to start enumerating directories at when -d is passed. Defaults to 1.
+  -n season_number  The season number to use when renaming episode files. Ignored if -d is passed.
 ```
 
 ### tv_rename.multipart
